@@ -12,10 +12,9 @@ services:
       PORT: 5000
       DB_USERNAME: root
       DB_PASSWORD: root
-      DB_DATABASE: db
+      DB_DATABASE: root
       DB_HOST: db
       DB_PORT: 5432
-      DATABASE_URL: postgres://root:root@db:5432/db
       DB_CONNECTION: postgres
     ports:
       - "5000:${PORT}"
@@ -29,7 +28,7 @@ services:
     environment:
       POSTGRES_PASSWORD: root
       POSTGRES_USER: root
-      POSTGRES_DB: db
+      POSTGRES_DB: root
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
       - "5432:5432"

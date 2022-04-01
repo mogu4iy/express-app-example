@@ -7,7 +7,5 @@ USER node
 COPY --chown=node:node package*.json ./
 RUN npm install
 COPY --chown=node:node . .
-RUN npm run migrate
-RUN npm run seed
 
-CMD ["npm", "run" ,"start"]
+ENTRYPOINT ["./entrypoint.sh"]
