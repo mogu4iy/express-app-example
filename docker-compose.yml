@@ -1,0 +1,45 @@
+version: '3.9'
+
+services:
+  server:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    tty: true
+    environment:
+      NODE_ENV: "docker"
+      PORT: 5000
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      DB_DATABASE: db
+      DB_HOST: db
+      DB_PORT: 5432
+      DATABASE_URL: postgres://root:root@db:5432/db
+      DB_CONNECTION: postgres
+    ports:
+      - "5000:${PORT}"
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: postgres
+    restart: unless-stopped
+    tty: true
+    environment:
+      POSTGRES_PASSWORD: root
+      POSTGRES_USER: root
+      POSTGRES_DB: db
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - "express_app_postgresql_database:/var/lib/postgresql/data"
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", "${POSTGRES_DB}", "-U", "${POSTGRES_USER}" ]
+      timeout: 45s
+      interval: 10s
+      retries: 10
+volumes:
+  express_app_postgresql_database:
+    driver: local
