@@ -1,6 +1,6 @@
 module.exports = [{
-    script: 'bin/www',
+    script: 'index.js',
     name: 'express_app',
-    exec_mode: 'cluster',
+    exec_mode: 'fork',
     instances: 1
 }]

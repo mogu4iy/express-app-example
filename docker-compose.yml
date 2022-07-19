@@ -4,41 +4,98 @@ services:
   server:
     build:
       context: ./
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile_local
     restart: unless-stopped
     tty: true
     environment:
-      NODE_ENV: "docker"
-      PORT: 5000
+      NODE_ENV: development-docker
+      APP_NAME: express_server
+      APP_VERSION: 1
+      PORT: 5555
+      DB_CONNECTION: mysql
+      DB_PORT: 3306
+      DB_HOST: mysql
       DB_USERNAME: root
       DB_PASSWORD: root
-      DB_DATABASE: root
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_CONNECTION: postgres
+      DB_DATABASE: stock_data
+      RABBIT_MQ_PROTOCOL: amqp
+      RABBIT_MQ_HOST: rabbitmq
+      RABBIT_MQ_PORT: 5672
+      RABBIT_MQ_USERNAME: admin
+      RABBIT_MQ_PASSWORD: admin
+      RABBIT_MQ_VHOST: /
+      INFLUX_DB_PROTOCOL: http
+      INFLUX_DB_HOST: influxdb
+      INFLUX_DB_PORT: 8086
+      INFLUX_DB_USERNAME: admin
+      INFLUX_DB_PASSWORD: password
+      REDIS_PROTOCOL: redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: admin
     ports:
-      - "5000:${PORT}"
-    depends_on:
-      db:
-        condition: service_healthy
-  db:
-    image: postgres
+      - "5000:5555"
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    tty: true
+    cap_add:
+      - SYS_NICE
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: stock_data
+    ports:
+      - "3306:3306"
+    volumes:
+      - "./mysql_init:/docker-entrypoint-initdb.d"
+      - "express_server_mysql_database:/var/lib/mysql"
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1 -u root --password=$$MYSQL_ROOT_PASSWORD
+  rabbitmq:
+    image: rabbitmq:3.10.5-management
+    tty: true
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_VHOST: /
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - "./rabbitmq-definitions.json:/etc/rabbitmq/definitions.json"
+      - "./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf"
+      - "express_server_rabbitmq_etc:/etc/rabbitmq/"
+      - "express_server_rabbitmq_data:/var/lib/rabbitmq/"
+      - "express_server_rabbitmq_log:/var/log/rabbitmq/"
+  redis:
+    image: redis:7.0
+    tty: true
+    restart: always
+    command: redis-server --save 20 1 --loglevel warning --requirepass admin
+    ports:
+      - '6379:6379'
+    volumes:
+      - "express_server_redis:/data"
+  influxdb:
+    image: influxdb:2.3
     restart: unless-stopped
     tty: true
     environment:
-      POSTGRES_PASSWORD: root
-      POSTGRES_USER: root
-      POSTGRES_DB: root
-      PGDATA: /var/lib/postgresql/data/pgdata
+      INFLUXDB_DB: alfex
     ports:
-      - "5432:5432"
+      - "8086:8086"
     volumes:
-      - "express_app_postgresql_database:/var/lib/postgresql/data"
-    healthcheck:
-      test: [ "CMD", "pg_isready", "-q", "-d", "${POSTGRES_DB}", "-U", "${POSTGRES_USER}" ]
-      timeout: 45s
-      interval: 10s
-      retries: 10
+      - "express_server_influxdb_data:/var/lib/influxdb2"
 volumes:
-  express_app_postgresql_database:
+  express_server_mysql_database:
+    driver: local
+  express_server_redis:
+    driver: local
+  express_server_rabbitmq_etc:
+    driver: local
+  express_server_rabbitmq_data:
+    driver: local
+  express_server_rabbitmq_log:
+    driver: local
+  express_server_influxdb_data:
     driver: local

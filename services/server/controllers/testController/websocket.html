@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title></title>
+</head>
+<body>
+<div style="display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-start;">
+    <label for="connection-count-input">Connection to open:</label>
+    <input id="connection-count-input" type="number" value="0"/>
+    <input id="connection-count-input-submit" type="button" placeholder="Submit"/>
+    <label for="create-connection-count-input">Connections:</label>
+    <input id="create-connection-count-input" type="number" value="0"/>
+</div>
+<div id="server-output-wrapper"></div>
+<script>
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    const handleMessage = (id) => (event) => {
+        const el = document.getElementById(id);
+        el.innerHTML = 'Server time: ' + event.data;
+    }
+    const handleConnection = (id, num, ws = null, outputId = null) => () => {
+        const el = document.getElementById(id);
+        const count = (isNaN(Number.parseInt(el.value)) ? 0 : Number.parseInt(el.value)) + num
+        el.value = `${count > 0 ? count : 0}`
+        if (ws) {
+            const timeout = Math.floor(Math.random() * 1000)
+            const closeTimeout = Math.floor(Math.random() * 10000)
+            const interval = setInterval(() => {
+                try {
+                    if (ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify({
+                            "message": "example",
+                        }))
+                    }
+                } catch (e) {
+                }
+            }, timeout)
+            setTimeout(() => {
+                clearInterval(interval)
+                ws.close()
+            }, closeTimeout)
+        }
+    }
+    const createConnection = async (count, host) => {
+        const countId = `create-connection-count-input`
+        const countEl = document.getElementById(countId);
+        let i = 0
+        while (true) {
+            await sleep(100)
+            if ((isNaN(Number.parseInt(countEl.value)) ? 0 : Number.parseInt(countEl.value)) >= Number.parseInt(count)) {
+                continue
+            }
+            const outputId = `server-time-${i}`
+            i += 1
+            const serverOutput = document.getElementById("server-output-wrapper")
+            const output = document.createElement("div")
+            output.setAttribute("id", outputId)
+            serverOutput.appendChild(output)
+            const ws = new WebSocket(host);
+            ws.onmessage = handleMessage(outputId)
+            ws.onopen = handleConnection(countId, 1, ws, outputId)
+            ws.onclose = () => {
+                handleConnection(countId, -1)()
+                document.getElementById(outputId).remove();
+            }
+            ws.onerror = () => {
+            }
+        }
+    }
+    const HOST = new URL(location.origin.replace(/^http/, 'ws'))
+    HOST.pathname = "websocket"
+    let submitted = false
+    const countInput = document.getElementById('connection-count-input')
+    const countInputSubmit = document.getElementById('connection-count-input-submit')
+    countInputSubmit.addEventListener("click", () => {
+        if (submitted) {
+            return
+        }
+        submitted = true
+        createConnection(countInput.value, HOST.href)
+    })
+</script>
+</body>
+</html>

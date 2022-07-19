@@ -1,11 +1,11 @@
-FROM node:16-alpine
+FROM nikolaik/python-nodejs:python3.10-nodejs16 as production-stage
 
-RUN mkdir -p /home/node/app/node_modules && chown -R node:node /home/node/app
+RUN mkdir -p /home/node/app/node_modules
+
 WORKDIR /home/node/app
-USER node
 
-COPY --chown=node:node package*.json ./
+COPY package*.json ./
 RUN npm install
-COPY --chown=node:node . .
+COPY . .
 
-ENTRYPOINT ["./entrypoint.sh"]
+ENTRYPOINT sh ./healthcheck.sh && sh ./entrypoint.sh

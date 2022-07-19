@@ -1,25 +1,36 @@
 const dotenv = require("dotenv");
 const path = require("path");
 
-const SERVER = require("./server");
 const DB = require("./db");
+const SERVER = require("./server");
+const RABBIT_MQ = require("./rabbit_mq");
+const CRON = require("./cron");
+const LIB = require("./lib");
+const REDIS = require("./redis");
+const INFLUX_DB = require("./influx_db");
+const LOGGER = require("./logger");
 
 const {validateConfig} = require("../utils/validations");
-const NODE_ENV = process.env.NODE_ENV ? process.env.NODE_ENV.trim() : 'production'
-if (NODE_ENV !== "docker") {
-    let ENV_FILE = ".env"
-    const resultEnv = dotenv.config({path: path.resolve(__dirname, `../${ENV_FILE}`)});
-    if (resultEnv.error) {
-        console.log(resultEnv.error);
-    }
-}
-process.env.NODE_ENV = NODE_ENV
+
+const SERVER_CONFIG = SERVER()
+const RABBIT_MQ_CONFIG = RABBIT_MQ({server_id: SERVER_CONFIG.SERVER.ID})
+const CRON_CONFIG = CRON()
+const LIB_CONFIG = LIB()
+const REDIS_CONFIG = REDIS()
+const INFLUX_DB_CONFIG = INFLUX_DB()
+const LOGGER_CONFIG = LOGGER()
 
 const config = {
-    ...SERVER(),
+    ...SERVER_CONFIG,
+    ...RABBIT_MQ_CONFIG,
+    ...CRON_CONFIG,
+    ...LIB_CONFIG,
+    ...REDIS_CONFIG,
+    ...INFLUX_DB_CONFIG,
+    ...LOGGER_CONFIG,
     DB: DB,
     APP_DIR: path.resolve(__dirname, "../"),
-    NODE_ENV: NODE_ENV,
+    NODE_ENV: process.env.NODE_ENV,
 };
 
 for (let key in config) {

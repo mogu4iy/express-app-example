@@ -1,6 +1,6 @@
-const config = require("../../config");
-const errors = require("../../utils/errors");
-const db = require("../../models");
+const config = require("../../../../config");
+const errors = require("../../../../utils/errors");
+const db = require("../../../../db/models");
 
 // @route GET api/config
 // @desc Get config
@@ -63,7 +63,7 @@ const configPromise = async (req, res, next, data) => {
 };
 
 module.exports = {
-    configController: errors.handlerWrapper({
+    configController: errors.httpHandlerWrapper({
         dataFunction: configData,
         promiseHandler: configPromise,
     }),

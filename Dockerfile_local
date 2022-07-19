@@ -1,0 +1,11 @@
+FROM nikolaik/python-nodejs:python3.10-nodejs16
+
+RUN mkdir -p /home/node/app/node_modules
+
+WORKDIR /home/node/app
+
+COPY package*.json ./
+RUN npm install
+COPY . .
+
+ENTRYPOINT python3 load_env.py .env .env.example && sh ./healthcheck_local.sh && sh ./entrypoint_local.sh

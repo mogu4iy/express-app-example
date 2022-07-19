@@ -1,3 +1,7 @@
+const config = require("../config")
+const {logger} = require("../services/logger");
+const {configureResponseMessage} = require("./ws_server");
+
 class Error400 extends Error {
     constructor(message) {
         super(message)
@@ -33,8 +37,63 @@ class Error500 extends Error {
     }
 }
 
-const handleError = ({error, res}) => {
-    console.log(error)
+class CustomError extends Error {
+    constructor(message) {
+        super(message)
+        this.custom = true
+    }
+}
+
+const wsHandleError = ({error,  ws, method}) => {
+    logger.error(error)
+    return error.custom ? (
+        ws.send(configureResponseMessage({
+            method: method,
+            error: true,
+            message: error,
+        }))
+    ) : (
+        config.NODE_ENV.includes(config.LIB.NODE_ENV.PROD) ? (
+            ws.send(configureResponseMessage({
+                method: method,
+                error: true,
+                message: config.SERVER.RESPONSE_MESSAGE.SERVER_ERROR(),
+            }))
+        ) : (
+            ws.send(configureResponseMessage({
+                method: method,
+                error: true,
+                message: error,
+            }))
+        )
+    )
+}
+
+const wsHandlerWrapper = ({dataFunction, promiseHandler}) => {
+    return async (data, context, ws, ws_server, next) => {
+        let promiseData
+        try {
+            promiseData = dataFunction(data, context, ws, ws_server)
+        } catch (e) {
+            return wsHandleError({
+                error: e,
+                ws: ws,
+                method: context.method,
+            })
+        }
+        return await promiseHandler(promiseData, context, ws, ws_server, next)
+            .catch(error => {
+                return wsHandleError({
+                    error: error,
+                    ws: ws,
+                    method: context.method,
+                })
+            })
+    }
+}
+
+const httpHandleError = ({error, res}) => {
+    logger.error(error)
     return error.status ? (
         res.status(200).json({
             success: false,
@@ -42,11 +101,11 @@ const handleError = ({error, res}) => {
             message: error.message,
         })
     ) : (
-        process.env.NODE_ENV === 'production' ? (
+        config.NODE_ENV.includes(config.LIB.NODE_ENV.PROD) ? (
             res.status(200).json({
                 success: false,
                 data: {},
-                message: `Server error`,
+                message: config.LIB.RESPONSE_MESSAGE.SERVER_ERROR(),
             })
         ) : (
             res.status(200).json({
@@ -58,49 +117,16 @@ const handleError = ({error, res}) => {
     )
 }
 
-const handlerWrapper = ({dataFunction, promiseHandler}) => {
+const httpHandlerWrapper = ({dataFunction, promiseHandler}) => {
     return async (req, res, next) => {
         return await promiseHandler(req, res, next, dataFunction(req))
             .catch(error => {
-                return handleError({
+                return httpHandleError({
                     error: error,
                     res: res
                 })
             })
     }
-}
-
-const errorMessages = {
-    USER_EXIST: 'USER_EXIST_MESSAGE',
-    USER_NOT_EXIST: 'USER_NOT_EXIST_MESSAGE',
-    AUTH_TOKEN_INVALID: 'AUTH_TOKEN_INVALID',
-    AUTH_TOKEN_DEPRECATED: 'AUTH_TOKEN_DEPRECATED',
-    TOKEN_INVALID: 'TOKEN_INVALID',
-    TOKEN_DEPRECATED: 'TOKEN_DEPRECATED',
-    USER_NOT_VERIFIED: 'USER_NOT_VERIFIED',
-    INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
-    MFA_ENABLED: 'MFA_ENABLED',
-    MFA_DISABLED: 'MFA_DISABLED',
-    NOT_ENOUGH_DATA_FOR_MFA: 'NOT_ENOUGH_DATA_FOR_MFA',
-    EMAIL_VERIFIED: 'EMAIL_VERIFIED',
-    EMAIL_NOT_VERIFIED: 'EMAIL_NOT_VERIFIED',
-    PHONE_VERIFIED: 'PHONE_VERIFIED',
-    PHONE_NOT_VERIFIED: 'PHONE_NOT_VERIFIED',
-    PHONE_NOT_EXIST: 'PHONE_NOT_EXIST',
-    EMAIL_NOT_EXIST: 'EMAIL_NOT_EXIST',
-    MFA_TYPE_NOT_AVAILABLE: 'MFA_TYPE_NOT_AVAILABLE',
-    TRY_LATER: "TRY_LATER",
-    SYMBOL_NOT_EXIST: "SYMBOL_NOT_EXIST",
-    WALLET_BLOCKED: "WALLET_BLOCKED",
-    WALLET_DISABLED: "WALLET_DISABLED",
-    WRONG_ORDER_TYPE: "WRONG_ORDER_TYPE",
-    PAYMENT_METHOD_EXIST_ALREADY: "PAYMENT_METHOD_EXIST_ALREADY",
-    PAYMENT_METHOD_NOT_EXIST: "PAYMENT_METHOD_NOT_EXIST",
-    WRONG_SESSION_START_TYPE: "WRONG_SESSION_START_TYPE",
-    COMPANY_NOT_EXIST: "COMPANY_NOT_EXIST",
-    WRONG_AMOUNT: "WRONG_AMOUNT",
-    WRONG_WALLET: "WRONG_WALLET",
-    WRONG_SESSION: "WRONG_SESSION"
 }
 
 module.exports = {
@@ -109,7 +135,7 @@ module.exports = {
     Error403,
     Error404,
     Error500,
-    errorMessages,
-    handlerWrapper,
-    handleError
+    CustomError,
+    httpHandlerWrapper,
+    wsHandlerWrapper
 }

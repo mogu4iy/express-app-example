@@ -38,3 +38,5 @@ build
 
 .dockerignore
 Dockerfile
+Dockerfile_local
+docker-compose.yml

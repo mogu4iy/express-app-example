@@ -2,9 +2,10 @@ const express = require('express');
 const cors = require("cors");
 const path = require('path');
 const cookieParser = require('cookie-parser');
-const logger = require('morgan');
 
 const configRouter = require('./routes/configRouter');
+const testRouter = require('./routes/testRouter');
+const healthRouter = require('./routes/healthRouter');
 
 const app = express();
 
@@ -14,13 +15,14 @@ app.use(
     })
 );
 
-app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api/config', configRouter);
+app.use('/test', testRouter);
+app.use('/health', healthRouter);
 
 app.use((req, res) => {
     res.status(404).end();

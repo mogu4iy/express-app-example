@@ -81,6 +81,8 @@ const axiosRequest = async ({
     return request;
 };
 
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
 module.exports = {
     pickRandomProperty,
     getKeyByValue,
@@ -89,5 +91,6 @@ module.exports = {
     httpRequest,
     randomCode,
     randomPassword,
-    axiosRequest
+    axiosRequest,
+    sleep
 }

@@ -1,5 +1,5 @@
 const {Router} = require("express");
-const config = require("../../config");
+const config = require("../../../../config");
 
 const {
     configController

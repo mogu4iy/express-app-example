@@ -46,5 +46,6 @@ const clearObject = object => {
 
 module.exports = {
     validateConfig,
+    validateObject,
     clearObject
 }
