@@ -93,14 +93,14 @@ class WsServer {
             });
             return ws.send(configureResponseMessage({
                 method: config.LIB.METHOD.CONNECTION,
-                message: config.SERVER.RESPONSE_MESSAGE.CONNECTION_SUCCESS(),
+                message: config.LIB.RESPONSE_MESSAGE.CONNECTION_SUCCESS(),
                 error: false
             }))
         } catch (e) {
             logger.error(e)
             ws.send(configureResponseMessage({
                 method: config.LIB.METHOD.CONNECTION,
-                message: config.SERVER.RESPONSE_MESSAGE.CONNECTION_FAILED(),
+                message: config.LIB.RESPONSE_MESSAGE.CONNECTION_FAILED(),
                 error: true
             }))
             return ws.terminate()
@@ -174,7 +174,7 @@ class WsServer {
     #sendServerError(ws, error) {
         return ws.send(configureResponseMessage({
             method: config.LIB.METHOD.ERROR,
-            message: config.SERVER.RESPONSE_MESSAGE.SERVER_ERROR(),
+            message: config.LIB.RESPONSE_MESSAGE.SERVER_ERROR(),
             error: true
         }))
     }

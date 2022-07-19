@@ -57,7 +57,7 @@ const wsHandleError = ({error,  ws, method}) => {
             ws.send(configureResponseMessage({
                 method: method,
                 error: true,
-                message: config.SERVER.RESPONSE_MESSAGE.SERVER_ERROR(),
+                message: config.LIB.RESPONSE_MESSAGE.SERVER_ERROR(),
             }))
         ) : (
             ws.send(configureResponseMessage({

@@ -1,4 +1,4 @@
-import {logger} from "../services/logger";
+const {logger} = require("../services/logger");
 
 function normalizePort(val) {
     const port = parseInt(val, 10);
