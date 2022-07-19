@@ -1,12 +1,10 @@
 const db = require("../../../db/models");
-const {parseStream} = require("../../../utils/server");
-const {logger} = require("../../logger");
 const {Store} = require("../../../utils/store")
 
-const STORE_KEY = "ws_stream"
+const STORE_KEY = "i18n_key"
 
 const init = async (store) => {
-    const recordList = await db.ws_stream.findAll({
+    const recordList = await db.i18n_key.findAll({
         where: {},
         include: [],
         logging: false,
@@ -15,19 +13,13 @@ const init = async (store) => {
     for (const record of recordList) {
         const keyList = [
             record["id"],
-            record["stream"]
+            record["key"]
         ]
         for (let key of keyList) {
             let recordObj = store.get(key) ?? {}
-            let parsedStream = {}
-            try {
-                parsedStream = parseStream(record["stream"])
-            } catch (e) {
-                logger.warning(e)
-                continue
-            }
+            recordObj["key"] = record["key"]
             recordObj["id"] = record["id"]
-            store.set(key, {...recordObj, ...parsedStream})
+            store.set(key, {...recordObj})
         }
     }
 }
@@ -38,7 +30,7 @@ const update = async (store, {store_id = []}) => {
         whereClause["id"] = store_id
     }
     const storeIdObj = {}
-    const recordList = await db.ws_stream.findAll({
+    const recordList = await db.i18n_key.findAll({
         where: whereClause,
         include: [],
         logging: false,
@@ -47,20 +39,14 @@ const update = async (store, {store_id = []}) => {
     for (const record of recordList) {
         const keyList = [
             record["id"],
-            record["stream"]
+            record["key"]
         ]
         storeIdObj[record["id"]] = keyList
         for (let key of keyList) {
             let recordObj = store.get(key) ?? {}
-            let parsedStream = {}
-            try {
-                parsedStream = parseStream(record["stream"])
-            } catch (e) {
-                logger.warning(e)
-                continue
-            }
+            recordObj["key"] = record["key"]
             recordObj["id"] = record["id"]
-            store.set(key, {...recordObj, ...parsedStream})
+            store.set(key, {...recordObj})
         }
     }
     for (let storeId of store_id.filter(x => !Object.keys(storeIdObj).includes(x))){
