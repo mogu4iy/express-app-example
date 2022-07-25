@@ -19,7 +19,7 @@ const exampleTask = ({interval: {key: intervalKey, value: intervalValue, cron: i
                 }, intervalValue * 0.9)
                 check()
                 clearTimeout(timeout)
-                logger.info(`exampleTask: for period ${intervalKey} took ${moment.duration(moment().diff(now)).asSeconds()}s.`)
+                logger.debug(`exampleTask: for period ${intervalKey} took ${moment.duration(moment().diff(now)).asSeconds()}s.`)
             } catch (e) {
                 logger.warning(e)
             }

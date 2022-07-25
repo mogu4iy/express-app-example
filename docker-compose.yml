@@ -9,7 +9,7 @@ services:
     tty: true
     environment:
       NODE_ENV: development-docker
-      APP_NAME: express_server
+      APP_NAME: node_js_server
       APP_VERSION: 1
       PORT: 5555
       DB_CONNECTION: mysql
@@ -49,7 +49,7 @@ services:
       - "3306:3306"
     volumes:
       - "./mysql_init:/docker-entrypoint-initdb.d"
-      - "express_server_mysql_database:/var/lib/mysql"
+      - "node_js_server_mysql_database:/var/lib/mysql"
     healthcheck:
       test: mysqladmin ping -h 127.0.0.1 -u root --password=$$MYSQL_ROOT_PASSWORD
   rabbitmq:
@@ -64,9 +64,9 @@ services:
     volumes:
       - "./rabbitmq-definitions.json:/etc/rabbitmq/definitions.json"
       - "./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf"
-      - "express_server_rabbitmq_etc:/etc/rabbitmq/"
-      - "express_server_rabbitmq_data:/var/lib/rabbitmq/"
-      - "express_server_rabbitmq_log:/var/log/rabbitmq/"
+      - "node_js_server_rabbitmq_etc:/etc/rabbitmq/"
+      - "node_js_server_rabbitmq_data:/var/lib/rabbitmq/"
+      - "node_js_server_rabbitmq_log:/var/log/rabbitmq/"
   redis:
     image: redis:7.0
     tty: true
@@ -75,7 +75,7 @@ services:
     ports:
       - '6379:6379'
     volumes:
-      - "express_server_redis:/data"
+      - "node_js_server_redis:/data"
   influxdb:
     image: influxdb:2.3
     restart: unless-stopped
@@ -85,17 +85,17 @@ services:
     ports:
       - "8086:8086"
     volumes:
-      - "express_server_influxdb_data:/var/lib/influxdb2"
+      - "node_js_server_influxdb_data:/var/lib/influxdb2"
 volumes:
-  express_server_mysql_database:
+  node_js_server_mysql_database:
     driver: local
-  express_server_redis:
+  node_js_server_redis:
     driver: local
-  express_server_rabbitmq_etc:
+  node_js_server_rabbitmq_etc:
     driver: local
-  express_server_rabbitmq_data:
+  node_js_server_rabbitmq_data:
     driver: local
-  express_server_rabbitmq_log:
+  node_js_server_rabbitmq_log:
     driver: local
-  express_server_influxdb_data:
+  node_js_server_influxdb_data:
     driver: local

@@ -1,5 +1,5 @@
 #!/bin/sh
 set -e
-npm run migrate
-npm start
+python3 load_env.py .env.healthcheck .env.healthcheck.local.example
+healthcheck -e .env.healthcheck -c healthcheck_local.json check
 exec "$@"

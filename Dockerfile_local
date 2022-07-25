@@ -4,8 +4,11 @@ RUN mkdir -p /home/node/app/node_modules
 
 WORKDIR /home/node/app
 
+COPY healthcheck_requirements.txt healthcheck_requirements.txt
+RUN python3 -m pip install -r healthcheck_requirements.txt
+
 COPY package*.json ./
 RUN npm install
 COPY . .
 
-ENTRYPOINT python3 load_env.py .env .env.example && sh ./healthcheck_local.sh && sh ./entrypoint_local.sh
+ENTRYPOINT sh ./healthcheck_local.sh && sh ./entrypoint_local.sh

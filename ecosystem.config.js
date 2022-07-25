@@ -1,6 +1,6 @@
 module.exports = [{
     script: 'index.js',
-    name: 'express_app',
+    name: 'node_js_server',
     exec_mode: 'fork',
     instances: 1
 }]

@@ -19,7 +19,7 @@ async function start() {
         await initWss()
         await initRabbitMq()
         await initCron()
-        await logger.info(`APP is initialized.`)
+        await logger.debug(`APP is initialized.`)
         config.SERVER.HEALTH = true
     } catch (e) {
         await initLogger()
